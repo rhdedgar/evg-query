@@ -1,0 +1,136 @@
+---
+apiVersion: v1 
+kind: Template
+metadata:
+  creationTimestamp: null
+  generation: 1
+  labels:
+    provider: openshift
+    evg-query-host: "true"
+    component: evg-query
+  name: oso-evg-query 
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      template: oso-evg-query
+    name: "oso-${PLAT}-evg-query"
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+        pullSecret:
+          name: dockercfgjson
+      importPolicy:
+        scheduled: true
+      name: latest
+- apiVersion: batch/v2alpha1
+  kind: CronJob
+  metadata:
+    name: report
+  spec:
+    schedule: "13 02 * * 1"
+    jobTemplate:
+      spec:
+        template:
+          metadata:
+            labels:
+              parent: "cronjobreport"
+          spec:
+            containers:
+            - name: cronreport
+              image: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+              command: ["/usr/local/bin/weekly_dupe_cronjob.sh"]
+              volumeMounts:
+              - mountPath: /secrets
+                name: oso-evg-query-secrets
+            volumes:
+            - name: oso-evg-query-secrets
+              secret:
+                secretName: oso-evg-query-secrets
+            restartPolicy: OnFailure 
+- apiVersion: batch/v2alpha1
+  kind: CronJob
+  metadata:
+    name: summary
+  spec:
+    schedule: "05 05 * * 5"
+    jobTemplate:
+      spec:
+        template:
+          metadata:
+            labels:
+              parent: "cronjobsummary"
+          spec:
+            containers:
+            - name: cronsummary
+              image: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+              command: ["/usr/local/bin/weekly_summary_cronjob.sh"]
+              volumeMounts:
+              - mountPath: /secrets
+                name: oso-evg-query-secrets
+            volumes:
+            - name: oso-evg-query-secrets
+              secret:
+                secretName: oso-evg-query-secrets
+            restartPolicy: OnFailure 
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      template: oso-evg-query
+    name: oso-evg-query
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: oso-evg-query
+    strategy:
+      resources: {}
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          deploymentconfig: oso-evg-query
+      spec:
+        containers:
+        - env:
+          - name: OO_PAUSE_ON_START
+            value: "false"
+          image: "oso-evg-query/oso-${PLAT}-evg-query:latest"
+          imagePullPolicy: Always
+          name: oso-evg-query
+          resources: {}
+          securityContext: {}
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - mountPath: /secrets
+            name: oso-evg-query-secrets
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: oso-evg-query-secrets
+          secret:
+            secretName: oso-evg-query-secrets
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - oso-evg-query
+        from:
+          kind: ImageStreamTag
+          name: "oso-${PLAT}-evg-query:latest"
+      type: ImageChange
+parameters:
+- description: Platform name
+  name: PLAT
+  value: rhel7
+- description: Project name
+  name: NAMESPACE
+  value: openshift-evg-query
