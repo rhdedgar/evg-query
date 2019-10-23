@@ -1,6 +1,6 @@
 # /usr/local/bin/start.sh will start the service
 
-FROM python:latest 
+FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
 # Pause indefinitely if asked to do so.
 ARG OO_PAUSE_ON_BUILD
