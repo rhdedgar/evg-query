@@ -16,7 +16,7 @@ echo user:x:$(id -u):0:USER:/root:/bin/bash >> /etc/passwd
 echo group:x:$(id -G | awk '{print $2}'):user >> /etc/group
 
 echo "Copy query tool to where unprivileged users can use from their path"
-cp /usr/local/bin/mysql_query /usr/local/bin/mysql_query
+cp /secrets/mysql_query /usr/local/bin/mysql_query
 chmod 777 /usr/local/bin/mysql_query
 
 echo This container hosts the following applications:
