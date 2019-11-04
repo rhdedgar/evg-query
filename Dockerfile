@@ -22,7 +22,7 @@ RUN sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysq
     pip install boto3 && \
     pip install botocore && \
     pip install requests2 && \
-    pip install yaml-1.3 && \
+    pip install yaml && \
     mkdir -p /var/log/reports && \
     chmod -R g+rwX /etc/passwd /etc/group /var/log && \
     chmod -R 777 /usr/local/bin
