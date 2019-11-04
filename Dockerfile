@@ -17,7 +17,7 @@ RUN test "$OO_PAUSE_ON_BUILD" = "true" && while sleep 10; do true; done || :
 
 ADD scripts/ /usr/local/bin/
 
-RUN RUN sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i.bkp && \
+RUN sed '/st_mysql_options options;/a unsigned int reconnect;' /usr/include/mysql/mysql.h -i.bkp \
     pip install MySQL-python && \
     pip install boto3 && \
     pip install botocore && \
