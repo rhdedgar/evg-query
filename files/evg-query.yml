@@ -15,19 +15,19 @@ objects:
   metadata:
     labels:
       template: oso-evg-query
-    name: "oso-${PLAT}-evg-query"
+    name: "oso-${plat}-evg-query"
   spec:
     tags:
     - annotations: null
       from:
         kind: DockerImage
-        name: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+        name: "quay.io/dedgar/account-report:latest"
         pullSecret:
           name: dockercfgjson
       importPolicy:
         scheduled: true
       name: latest
-- apiVersion: batch/v2alpha1
+- apiVersion: batch/v1beta1
   kind: CronJob
   metadata:
     name: report
@@ -42,7 +42,7 @@ objects:
           spec:
             containers:
             - name: cronreport
-              image: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+              image: "oso-evg-query/oso-${PLAT}-evg-query:latest"
               command: ["/usr/local/bin/weekly_dupe_cronjob.sh"]
               volumeMounts:
               - mountPath: /secrets
@@ -52,7 +52,7 @@ objects:
               secret:
                 secretName: oso-evg-query-secrets
             restartPolicy: OnFailure 
-- apiVersion: batch/v2alpha1
+- apiVersion: batch/v1beta1
   kind: CronJob
   metadata:
     name: summary
@@ -67,7 +67,7 @@ objects:
           spec:
             containers:
             - name: cronsummary
-              image: "registry.reg-aws.openshift.com:443/openshift-evg-query/oso-${PLAT}-evg-query:latest"
+              image: "oso-evg-query/oso-${PLAT}-evg-query:latest"
               command: ["/usr/local/bin/weekly_summary_cronjob.sh"]
               volumeMounts:
               - mountPath: /secrets
@@ -100,7 +100,7 @@ objects:
           - name: OO_PAUSE_ON_START
             value: "false"
           image: "oso-evg-query/oso-${PLAT}-evg-query:latest"
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent 
           name: oso-evg-query
           resources: {}
           securityContext: {}
@@ -108,6 +108,8 @@ objects:
           volumeMounts:
           - mountPath: /secrets
             name: oso-evg-query-secrets
+        imagePullSecrets:
+        - name: dockercfgjson
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         securityContext: {}
@@ -133,4 +135,4 @@ parameters:
   value: rhel7
 - description: Project name
   name: NAMESPACE
-  value: openshift-evg-query
+  value: account-report

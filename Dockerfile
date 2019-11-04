@@ -11,12 +11,16 @@ RUN yum install -y python2-boto3 \
                    MySQL-python \
                    python34 \
                    python34-mysql \
+                   python2-pip \
                    python2-botocore && \
     yum clean all
 
 ADD scripts/ /usr/local/bin/
 
-RUN mkdir -p /var/log/reports && \
+RUN pip install MySQL-python && \
+    pip install boto3 && \
+    pip install botocore && \
+    mkdir -p /var/log/reports && \
     chmod -R g+rwX /etc/passwd /etc/group /var/log && \
     chmod -R 777 /usr/local/bin
 
